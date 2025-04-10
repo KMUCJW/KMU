@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IncomingForm } from 'formidable';
+import { IncomingForm, Fields, Files } from 'formidable';
 import cloudinary from '../../../lib/cloudinary';
 
 export const config = {
@@ -24,7 +24,7 @@ export default async function handler(
       allowEmptyFiles: false,
     });
 
-    const [fields, files] = await new Promise((resolve, reject) => {
+    const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
         resolve([fields, files]);
@@ -34,8 +34,8 @@ export default async function handler(
     // Upload main image to Cloudinary
     const mainImageFile = files.mainImage;
     let mainImageUrl = '';
-    if (mainImageFile && mainImageFile.filepath) {
-      const mainImageResult = await cloudinary.uploader.upload(mainImageFile.filepath, {
+    if (mainImageFile && Array.isArray(mainImageFile) && mainImageFile[0]?.filepath) {
+      const mainImageResult = await cloudinary.uploader.upload(mainImageFile[0].filepath, {
         folder: 'projects',
       });
       mainImageUrl = mainImageResult.secure_url;
@@ -49,8 +49,8 @@ export default async function handler(
         : [files.subImages];
 
       for (const file of subImageFiles) {
-        if (file.filepath) {
-          const result = await cloudinary.uploader.upload(file.filepath, {
+        if (Array.isArray(file) && file[0]?.filepath) {
+          const result = await cloudinary.uploader.upload(file[0].filepath, {
             folder: 'projects',
           });
           subImages.push({
