@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IncomingForm, Fields, Files } from 'formidable';
-import fs from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 export const config = {
   api: {
@@ -23,7 +22,6 @@ export default async function handler(
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // 10MB
       allowEmptyFiles: false,
-      uploadDir: path.join(process.cwd(), 'public/images/projects'),
     });
 
     const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
@@ -37,10 +35,11 @@ export default async function handler(
     const mainImageFile = files.mainImage;
     let mainImageUrl = '';
     if (mainImageFile && Array.isArray(mainImageFile) && mainImageFile[0]?.filepath) {
-      const oldPath = mainImageFile[0].filepath;
-      const newPath = path.join(process.cwd(), 'public/images/projects', mainImageFile[0].originalFilename || 'main.jpg');
-      fs.renameSync(oldPath, newPath);
-      mainImageUrl = `/images/projects/${mainImageFile[0].originalFilename}`;
+      const file = mainImageFile[0];
+      const blob = await put(`projects/${file.originalFilename}`, file.filepath, {
+        access: 'public',
+      });
+      mainImageUrl = blob.url;
     }
 
     // Upload sub images
@@ -52,11 +51,11 @@ export default async function handler(
 
       for (const file of subImageFiles) {
         if (Array.isArray(file) && file[0]?.filepath) {
-          const oldPath = file[0].filepath;
-          const newPath = path.join(process.cwd(), 'public/images/projects', file[0].originalFilename || 'sub.jpg');
-          fs.renameSync(oldPath, newPath);
+          const blob = await put(`projects/${file[0].originalFilename}`, file[0].filepath, {
+            access: 'public',
+          });
           subImages.push({
-            url: `/images/projects/${file[0].originalFilename}`,
+            url: blob.url,
             caption: fields[`subImageCaption${subImages.length}`] || '',
             captionEng: fields[`subImageCaptionEng${subImages.length}`] || '',
           });
