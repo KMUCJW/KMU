@@ -8,6 +8,11 @@ export const config = {
   },
 };
 
+interface FormidableFile {
+  filepath: string;
+  originalFilename?: string;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -21,37 +26,38 @@ export default async function handler(
       multiples: true,
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // 10MB
-      allowEmptyFiles: false,
     });
 
-    const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
+    const [fields, files]: [Fields, Files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
         resolve([fields, files]);
       });
     });
 
-    // Upload main image
-    const mainImageFile = files.mainImage;
+    const mainImageFile = files.mainImage as FormidableFile | FormidableFile[];
     let mainImageUrl = '';
-    if (mainImageFile && Array.isArray(mainImageFile) && mainImageFile[0]?.filepath) {
-      const file = mainImageFile[0];
-      const blob = await put(`projects/${file.originalFilename}`, file.filepath, {
-        access: 'public',
-      });
-      mainImageUrl = blob.url;
+
+    if (mainImageFile) {
+      const file = Array.isArray(mainImageFile) ? mainImageFile[0] : mainImageFile;
+      if (file?.filepath) {
+        const blob = await put(file.originalFilename || 'image.jpg', file.filepath, {
+          access: 'public',
+        });
+        mainImageUrl = blob.url;
+      }
     }
 
     // Upload sub images
     const subImages = [];
-    if (files.subImages) {
-      const subImageFiles = Array.isArray(files.subImages) 
-        ? files.subImages 
-        : [files.subImages];
-
-      for (const file of subImageFiles) {
-        if (Array.isArray(file) && file[0]?.filepath) {
-          const blob = await put(`projects/${file[0].originalFilename}`, file[0].filepath, {
+    const subImageFiles = files.subImages as FormidableFile | FormidableFile[];
+    
+    if (subImageFiles) {
+      const filesArray = Array.isArray(subImageFiles) ? subImageFiles : [subImageFiles];
+      
+      for (const file of filesArray) {
+        if (file?.filepath) {
+          const blob = await put(file.originalFilename || 'image.jpg', file.filepath, {
             access: 'public',
           });
           subImages.push({
