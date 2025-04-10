@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IncomingForm, Fields, Files } from 'formidable';
-import cloudinary from '../../../lib/cloudinary';
+import fs from 'fs';
+import path from 'path';
 
 export const config = {
   api: {
@@ -22,6 +23,7 @@ export default async function handler(
       keepExtensions: true,
       maxFileSize: 10 * 1024 * 1024, // 10MB
       allowEmptyFiles: false,
+      uploadDir: path.join(process.cwd(), 'public/images/projects'),
     });
 
     const [fields, files] = await new Promise<[Fields, Files]>((resolve, reject) => {
@@ -31,17 +33,17 @@ export default async function handler(
       });
     });
 
-    // Upload main image to Cloudinary
+    // Upload main image
     const mainImageFile = files.mainImage;
     let mainImageUrl = '';
     if (mainImageFile && Array.isArray(mainImageFile) && mainImageFile[0]?.filepath) {
-      const mainImageResult = await cloudinary.uploader.upload(mainImageFile[0].filepath, {
-        folder: 'projects',
-      });
-      mainImageUrl = mainImageResult.secure_url;
+      const oldPath = mainImageFile[0].filepath;
+      const newPath = path.join(process.cwd(), 'public/images/projects', mainImageFile[0].originalFilename || 'main.jpg');
+      fs.renameSync(oldPath, newPath);
+      mainImageUrl = `/images/projects/${mainImageFile[0].originalFilename}`;
     }
 
-    // Upload sub images to Cloudinary
+    // Upload sub images
     const subImages = [];
     if (files.subImages) {
       const subImageFiles = Array.isArray(files.subImages) 
@@ -50,11 +52,11 @@ export default async function handler(
 
       for (const file of subImageFiles) {
         if (Array.isArray(file) && file[0]?.filepath) {
-          const result = await cloudinary.uploader.upload(file[0].filepath, {
-            folder: 'projects',
-          });
+          const oldPath = file[0].filepath;
+          const newPath = path.join(process.cwd(), 'public/images/projects', file[0].originalFilename || 'sub.jpg');
+          fs.renameSync(oldPath, newPath);
           subImages.push({
-            url: result.secure_url,
+            url: `/images/projects/${file[0].originalFilename}`,
             caption: fields[`subImageCaption${subImages.length}`] || '',
             captionEng: fields[`subImageCaptionEng${subImages.length}`] || '',
           });
