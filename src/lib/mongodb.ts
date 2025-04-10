@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
+// MongoDB 연결이 필요한 경우에만 연결을 시도합니다
+if (process.env.NODE_ENV === 'development' && !MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
@@ -22,6 +23,11 @@ if (!cached) {
 }
 
 async function connectDB() {
+  // 개발 환경에서만 MongoDB 연결을 시도합니다
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
