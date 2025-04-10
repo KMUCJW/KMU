@@ -61,4 +61,6 @@ export const projects: Project[] = [
     descriptionEng: 'Poster design for Modu Art Theater',
     tags: ['Poster Design', 'Theater', 'Visual Communication']
   }
-]; 
+];
+
+export default projects; 
