@@ -7,8 +7,13 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'kmu-psi.vercel.app',
       },
+      {
+        protocol: 'https',
+        hostname: 'blob.vercel-storage.com',
+      },
     ],
   },
+  output: 'standalone',
 }
 
 module.exports = nextConfig 

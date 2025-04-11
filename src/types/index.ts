@@ -9,6 +9,7 @@ export interface Project {
   year: string;
   description?: string;
   descriptionEng?: string;
+  imageUrl?: string;
 }
 
 export type Language = 'ko' | 'en'; 

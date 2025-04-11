@@ -146,7 +146,7 @@ export default function Home() {
   const [language, setLanguage] = useState<Language>('ko');
   const [uploading, setUploading] = useState(false);
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, projectId: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -155,6 +155,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('filename', file.name);
+      formData.append('projectId', projectId);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -168,6 +169,9 @@ export default function Home() {
       const data = await response.json();
       console.log('Upload successful:', data.url);
       alert('이미지가 성공적으로 업로드되었습니다!');
+      
+      // Refresh the page to show the new image
+      window.location.reload();
       
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -209,7 +213,7 @@ export default function Home() {
             <HiddenInput
               type="file"
               accept="image/*"
-              onChange={handleUpload}
+              onChange={(e) => handleUpload(e, projects[0].id)}
               disabled={uploading}
             />
           </UploadButton>
@@ -220,11 +224,23 @@ export default function Home() {
         <Grid>
           {filteredProjects.map((project) => (
             <ProjectCard key={project.id}>
-              <ProjectImage
-                src={`/images/projects/${project.image}`}
-                alt={language === 'ko' ? project.title : project.titleEng}
-                fill
-              />
+              {project.imageUrl ? (
+                <ProjectImage
+                  src={project.imageUrl}
+                  alt={language === 'ko' ? project.title : project.titleEng}
+                  fill
+                />
+              ) : (
+                <UploadButton as="label">
+                  {uploading ? '업로드 중...' : '이미지 업로드'}
+                  <HiddenInput
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleUpload(e, project.id)}
+                    disabled={uploading}
+                  />
+                </UploadButton>
+              )}
               <ProjectInfo>
                 <ProjectTitle>
                   {language === 'ko' ? project.title : project.titleEng}
