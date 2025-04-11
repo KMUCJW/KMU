@@ -3,153 +3,127 @@ import Head from 'next/head';
 import Image from 'next/image';
 import styled from 'styled-components';
 import { projects } from '../data/projects';
-import type { Language, Project } from '../types';
+import type { Category, Language, Project } from '../types';
 
 const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-`;
-
-const Header = styled.header`
+  min-height: 100vh;
+  background-color: #000;
+  color: #fff;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
 `;
 
-const UploadLabel = styled.label`
+const Sidebar = styled.div`
+  width: 300px;
+  padding: 40px;
+  border-right: 1px solid #333;
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 15px 30px;
-  background-color: #007AFF;
-  color: white;
-  border: none;
-  border-radius: 8px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Logo = styled.div`
+  font-size: 24px;
+  margin-bottom: 60px;
+`;
+
+const CategoryList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: auto;
+`;
+
+const CategoryItem = styled.div<{ active: boolean }>`
+  font-size: 18px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  transition: all 0.2s;
+  color: ${props => props.active ? '#fff' : '#666'};
+  transition: color 0.3s;
 
   &:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #fff;
   }
 `;
 
-const HiddenInput = styled.input`
-  display: none;
+const NavLinks = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: auto;
+`;
+
+const NavLink = styled.a`
+  color: #666;
+  text-decoration: none;
+  font-size: 18px;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #fff;
+  }
+`;
+
+const MainContent = styled.main`
+  margin-left: 300px;
+  flex: 1;
+  padding: 40px;
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+  gap: 40px;
 `;
 
 const ProjectCard = styled.div`
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s;
-  
-  &:hover {
-    transform: translateY(-5px);
-  }
-`;
-
-const ImageWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  padding-bottom: 75%;
+  aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 8px;
 `;
 
-const Title = styled.h3`
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  font-weight: 500;
-`;
+const ProjectImage = styled(Image)`
+  object-fit: cover;
+  transition: transform 0.3s;
 
-const CategoryFilter = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin: 2rem 0;
-  flex-wrap: wrap;
-`;
-
-const CategoryButton = styled.button.withConfig({
-  shouldForwardProp: (prop) => !['isSelected'].includes(prop),
-})<{ isSelected: boolean }>`
-  padding: 0.5rem 1rem;
-  border: 1px solid ${props => props.isSelected ? '#000' : '#ddd'};
-  border-radius: 20px;
-  background: ${props => props.isSelected ? '#000' : 'transparent'};
-  color: ${props => props.isSelected ? '#fff' : '#000'};
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    border-color: #000;
+  ${ProjectCard}:hover & {
+    transform: scale(1.05);
   }
 `;
 
-const LanguageToggle = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-  
-  &:hover {
-    border-color: #000;
+const ProjectInfo = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+
+  ${ProjectCard}:hover & {
+    opacity: 1;
   }
+`;
+
+const ProjectTitle = styled.h3`
+  margin: 0;
+  font-size: 18px;
+`;
+
+const ProjectYear = styled.div`
+  font-size: 14px;
+  color: #999;
+  margin-top: 5px;
 `;
 
 export default function Home() {
+  const [selectedCategory, setSelectedCategory] = useState<Category>('All types');
   const [language, setLanguage] = useState<Language>('ko');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  
-  const categories = ['All', ...Array.from(new Set(projects.map(project => project.category)))];
-  
-  const filteredProjects = selectedCategory === 'All'
+
+  const filteredProjects = selectedCategory === 'All types'
     ? projects
     : projects.filter(project => project.category === selectedCategory);
-
-  const toggleLanguage = () => {
-    setLanguage(prev => prev === 'ko' ? 'en' : 'ko');
-  };
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const data = await response.json();
-      console.log('Upload successful:', data.url);
-      
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    }
-  };
 
   return (
     <Container>
@@ -158,48 +132,44 @@ export default function Home() {
         <meta name="description" content="Welcome to my portfolio" />
       </Head>
 
-      <UploadLabel>
-        이미지 업로드
-        <HiddenInput
-          type="file"
-          accept="image/*"
-          onChange={handleUpload}
-        />
-      </UploadLabel>
+      <Sidebar>
+        <Logo>ㅊㅈㅇ</Logo>
+        <CategoryList>
+          {(['All types', 'Graphic', 'Identity', 'Motion/Video'] as Category[]).map((category) => (
+            <CategoryItem
+              key={category}
+              active={selectedCategory === category}
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </CategoryItem>
+          ))}
+        </CategoryList>
+        <NavLinks>
+          <NavLink href="#about">About</NavLink>
+          <NavLink href="#contact">Contact</NavLink>
+        </NavLinks>
+      </Sidebar>
 
-      <LanguageToggle onClick={toggleLanguage}>
-        {language === 'ko' ? 'English' : '한국어'}
-      </LanguageToggle>
-
-      <CategoryFilter>
-        {categories.map(category => (
-          <CategoryButton
-            key={category}
-            isSelected={category === selectedCategory}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </CategoryButton>
-        ))}
-      </CategoryFilter>
-
-      <Grid>
-        {filteredProjects.map((project) => (
-          <ProjectCard key={project.id}>
-            <ImageWrapper>
-              <Image
+      <MainContent>
+        <Grid>
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id}>
+              <ProjectImage
                 src={`/images/projects/${project.image}`}
                 alt={language === 'ko' ? project.title : project.titleEng}
                 fill
-                style={{ objectFit: 'cover' }}
               />
-            </ImageWrapper>
-            <Title>
-              {language === 'ko' ? project.title : project.titleEng}
-            </Title>
-          </ProjectCard>
-        ))}
-      </Grid>
+              <ProjectInfo>
+                <ProjectTitle>
+                  {language === 'ko' ? project.title : project.titleEng}
+                </ProjectTitle>
+                <ProjectYear>{project.year}</ProjectYear>
+              </ProjectInfo>
+            </ProjectCard>
+          ))}
+        </Grid>
+      </MainContent>
     </Container>
   );
 } 

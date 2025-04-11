@@ -1,11 +1,14 @@
+export type Category = 'All types' | 'Graphic' | 'Identity' | 'Motion/Video';
+
 export interface Project {
-  id: number;
+  id: string;
   title: string;
-  titleEng?: string;
+  titleEng: string;
+  category: Category;
   image: string;
-  category: 'Graphic' | 'Editorial' | 'Identity' | 'Motion' | 'Practice' | 'Website';
-  year: number;
-  client?: string;
+  year: string;
+  description?: string;
+  descriptionEng?: string;
 }
 
-export type Language = 'kor' | 'eng'; 
+export type Language = 'ko' | 'en'; 
