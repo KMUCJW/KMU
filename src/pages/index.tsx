@@ -1,15 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import styled from 'styled-components';
 import { projects } from '../data/projects';
 import type { Language, Project } from '../types';
-import ImageUpload from '../components/ImageUpload';
 
 const Container = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+`;
+
+const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+`;
+
+const UploadButton = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #444;
+  }
 `;
 
 const Grid = styled.div`
@@ -81,6 +102,7 @@ const LanguageToggle = styled.button`
 export default function Home() {
   const [language, setLanguage] = useState<Language>('ko');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [showUploadModal, setShowUploadModal] = useState(false);
   
   const categories = ['All', ...Array.from(new Set(projects.map(project => project.category)))];
   
@@ -92,6 +114,31 @@ export default function Home() {
     setLanguage(prev => prev === 'ko' ? 'en' : 'ko');
   };
 
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      console.log('Upload successful:', data.url);
+      
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+
   return (
     <Container>
       <Head>
@@ -99,11 +146,21 @@ export default function Home() {
         <meta name="description" content="Welcome to my portfolio" />
       </Head>
 
-      <LanguageToggle onClick={toggleLanguage}>
-        {language === 'ko' ? 'English' : '한국어'}
-      </LanguageToggle>
+      <Header>
+        <LanguageToggle onClick={toggleLanguage}>
+          {language === 'ko' ? 'English' : '한국어'}
+        </LanguageToggle>
 
-      <ImageUpload />
+        <UploadButton>
+          이미지 업로드
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleUpload}
+            style={{ display: 'none' }}
+          />
+        </UploadButton>
+      </Header>
 
       <CategoryFilter>
         {categories.map(category => (
