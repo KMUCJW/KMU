@@ -18,23 +18,31 @@ const Header = styled.header`
   margin-bottom: 2rem;
 `;
 
-const UploadButton = styled.button`
-  padding: 0.8rem 1.5rem;
+const UploadLabel = styled.label`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 30px;
   background-color: #007AFF;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.2s;
 
   &:hover {
     background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
+`;
+
+const HiddenInput = styled.input`
+  display: none;
 `;
 
 const Grid = styled.div`
@@ -150,21 +158,18 @@ export default function Home() {
         <meta name="description" content="Welcome to my portfolio" />
       </Head>
 
-      <Header>
-        <LanguageToggle onClick={toggleLanguage}>
-          {language === 'ko' ? 'English' : '한국어'}
-        </LanguageToggle>
+      <UploadLabel>
+        이미지 업로드
+        <HiddenInput
+          type="file"
+          accept="image/*"
+          onChange={handleUpload}
+        />
+      </UploadLabel>
 
-        <UploadButton>
-          이미지 업로드
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleUpload}
-            style={{ display: 'none' }}
-          />
-        </UploadButton>
-      </Header>
+      <LanguageToggle onClick={toggleLanguage}>
+        {language === 'ko' ? 'English' : '한국어'}
+      </LanguageToggle>
 
       <CategoryFilter>
         {categories.map(category => (
