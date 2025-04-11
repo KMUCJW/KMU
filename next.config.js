@@ -2,10 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['kmu-psi.vercel.app'],
-  },
-  experimental: {
-    serverActions: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'kmu-psi.vercel.app',
+      },
+    ],
   },
 }
 

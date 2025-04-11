@@ -25,6 +25,7 @@ const Sidebar = styled.div`
 const Logo = styled.div`
   font-size: 24px;
   margin-bottom: 60px;
+  font-weight: 500;
 `;
 
 const CategoryList = styled.div`
@@ -34,11 +35,12 @@ const CategoryList = styled.div`
   margin-bottom: auto;
 `;
 
-const CategoryItem = styled.div<{ active: boolean }>`
+const CategoryItem = styled.div<{ $active: boolean }>`
   font-size: 18px;
   cursor: pointer;
-  color: ${props => props.active ? '#fff' : '#666'};
+  color: ${props => props.$active ? '#fff' : '#666'};
   transition: color 0.3s;
+  font-weight: ${props => props.$active ? '500' : '400'};
 
   &:hover {
     color: #fff;
@@ -57,6 +59,7 @@ const NavLink = styled.a`
   text-decoration: none;
   font-size: 18px;
   transition: color 0.3s;
+  font-weight: 400;
 
   &:hover {
     color: #fff;
@@ -109,6 +112,7 @@ const ProjectInfo = styled.div`
 const ProjectTitle = styled.h3`
   margin: 0;
   font-size: 18px;
+  font-weight: 500;
 `;
 
 const ProjectYear = styled.div`
@@ -117,9 +121,61 @@ const ProjectYear = styled.div`
   margin-top: 5px;
 `;
 
+const UploadButton = styled.button`
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #666;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 20px;
+
+  &:hover {
+    border-color: #fff;
+    color: #fff;
+  }
+`;
+
+const HiddenInput = styled.input`
+  display: none;
+`;
+
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('All types');
   const [language, setLanguage] = useState<Language>('ko');
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filename', file.name);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      console.log('Upload successful:', data.url);
+      alert('이미지가 성공적으로 업로드되었습니다!');
+      
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('업로드 중 오류가 발생했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const filteredProjects = selectedCategory === 'All types'
     ? projects
@@ -138,7 +194,7 @@ export default function Home() {
           {(['All types', 'Graphic', 'Identity', 'Motion/Video'] as Category[]).map((category) => (
             <CategoryItem
               key={category}
-              active={selectedCategory === category}
+              $active={selectedCategory === category}
               onClick={() => setSelectedCategory(category)}
             >
               {category}
@@ -148,6 +204,15 @@ export default function Home() {
         <NavLinks>
           <NavLink href="#about">About</NavLink>
           <NavLink href="#contact">Contact</NavLink>
+          <UploadButton as="label">
+            {uploading ? '업로드 중...' : '이미지 업로드'}
+            <HiddenInput
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </UploadButton>
         </NavLinks>
       </Sidebar>
 
