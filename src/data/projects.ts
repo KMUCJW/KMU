@@ -6,7 +6,7 @@ export const projects: Project[] = [
     title: 'LX하우시스 2025 트렌드북',
     titleEng: 'LX Hausys 2025 Trend Book',
     category: 'Graphic',
-    image: 'lx-hausys.jpg',
+    image: '',
     year: '2024',
     description: 'LX하우시스 2025 트렌드북 디자인',
     descriptionEng: 'LX Hausys 2025 Trend Book Design'
@@ -16,7 +16,7 @@ export const projects: Project[] = [
     title: '시대 정신 프로젝트',
     titleEng: 'Spirit of the Times Project',
     category: 'Identity',
-    image: 'spirit.jpg',
+    image: '',
     year: '2024',
     description: '시대 정신 프로젝트 브랜딩',
     descriptionEng: 'Spirit of the Times Project Branding'
@@ -26,7 +26,7 @@ export const projects: Project[] = [
     title: '불온한 인권',
     titleEng: 'Subversive Human Rights',
     category: 'Motion/Video',
-    image: 'human-rights.jpg',
+    image: '',
     year: '2024',
     description: '불온한 인권 프로젝트 모션 그래픽',
     descriptionEng: 'Subversive Human Rights Project Motion Graphics'

@@ -9,11 +9,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['kmu-psi.vercel.app'],
-    },
-  },
 }
 
 module.exports = nextConfig 

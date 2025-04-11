@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { put } from '@vercel/blob';
+import formidable from 'formidable';
 
 export const config = {
   api: {
@@ -16,17 +17,16 @@ export default async function handler(
       return response.status(405).json({ error: 'Method not allowed' });
     }
 
-    const file = request.body;
+    const form = formidable({});
+    const [fields, files] = await form.parse(request);
+    
+    const file = files.file?.[0];
     if (!file) {
       return response.status(400).json({ error: 'No file provided' });
     }
 
-    const filename = request.query.filename as string;
-    if (!filename) {
-      return response.status(400).json({ error: 'No filename provided' });
-    }
-
-    const blob = await put(filename, file, {
+    const filename = fields.filename?.[0] || file.originalFilename || 'upload';
+    const blob = await put(filename, file.filepath, {
       access: 'public',
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
